@@ -21,15 +21,19 @@ const LeftBar: React.FC<LeftBarProps> = ({ chats, onChatSelect, trigger }) => {
   const [showedChats, setShowedChats] = useState<ChatInterface[]>([])
 
   useEffect(() => {
-    setShowedChats(chats)
-  }, [chats, trigger])
+    if (Array.isArray(chats)) {
+      setShowedChats(chats);
+    } else {
+      setShowedChats([]);
+    }
+  }, [chats, trigger]);
 
 
 
 
   async function handleSearch() {
     if (!user) return
-    const response = await MessengerService.trySendChatRequest(
+    const response = await MessengerService.sendChatRequest(
       { requestedNickname: searchTerm, requesterPublicKey: user.publicKey }
     )
     if (response == 'success') {
@@ -37,6 +41,21 @@ const LeftBar: React.FC<LeftBarProps> = ({ chats, onChatSelect, trigger }) => {
     }
   }
 
+  const renderChats: any = (chats: ChatInterface[]) => {
+    return (
+      
+        chats.map((chat: ChatInterface) => (
+          <li
+            onClick={() => onChatSelect(chat)}
+            style={{ cursor: 'pointer', padding: '5px 0' }}
+          >
+            {getOpponentNickname(user, chat)}
+          </li>
+        ))
+      
+    )
+
+  }
 
   return (
     <aside style={{ width: '250px', padding: '10px', borderRight: '1px solid #ccc' }}>
@@ -52,14 +71,7 @@ const LeftBar: React.FC<LeftBarProps> = ({ chats, onChatSelect, trigger }) => {
       </div>
 
       <ul>
-        {chats.map(chat => (
-          <li
-            onClick={() => onChatSelect(chat)}
-            style={{ cursor: 'pointer', padding: '5px 0' }}
-          >
-            {getOpponentNickname(user, chat)}
-          </li>
-        ))}
+        {renderChats(showedChats)}
       </ul>
     </aside>
   );

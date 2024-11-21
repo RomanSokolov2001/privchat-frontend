@@ -82,7 +82,6 @@ const Signup: React.FC = () => {
                     Already have an account? <Link to="/" className="text-blue-500 hover:underline">Login</Link>
                 </p>
             </form>
-            <button onClick={doTest}>Press me</button>
         </div>
     );
 };

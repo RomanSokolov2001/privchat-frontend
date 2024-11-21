@@ -4,7 +4,10 @@ import LeftBar, { getOpponentNickname } from '../components/LeftBar';
 import Chat from '../components/Chat';
 import { useUser } from '../context/UserContext';
 import {  MessengerService } from '../api/MessengerService';
-import { AcceptChatRequestDto, ChatInterface } from '../types';
+import { AcceptChatRequestDto, ChatInterface, ChatInterfaceDto } from '../types';
+
+import SockJS from 'sockjs-client';
+import { Client, Stomp } from '@stomp/stompjs';
 
 
 const Messenger: React.FC = () => {
@@ -13,33 +16,63 @@ const Messenger: React.FC = () => {
   const [chats, setChats] = useState([])
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
+  // const [stompClient, setStompClient] = useState<Client | null>(null);  const [connected, setConnected] = useState(false);
+  // const [wsMessages, setWsMessages] = useState<any[]>([]);
+
+  // const [mounted, setMounted] = useState(false)
+
+  
   useEffect(() => {
     if (user == null) return
 
-    console.log('Triggered:')
-
     async function loadChats() {
       if (user == null) return
+     
 
-      const chats = await MessengerService.getChats()
+      const chats = await MessengerService.getChats(user.publicKey)
       if (chats.length) {
         setChats(chats)
+        console.log(chats)
       }
     }
-    async function acceptIncomingRequests() {
-      if (user == null) return
 
-      const requests = await MessengerService.getChatRequests()
-      if (requests.length > 0) {
-        requests.map(async (rq: AcceptChatRequestDto) => {
-          rq.requestedPublicKey = user.publicKey
-          await MessengerService.acceptChatRequest(rq)
-        })
-      }
-    }
-    acceptIncomingRequests()
     loadChats()
   }, [refreshTrigger])
+
+  useEffect(() => {
+    const socket = new SockJS('http://localhost:8080/ws');
+    const client = Stomp.over(socket);
+
+    client.connect({}, () => {
+        var url = client.ws._transport.url;
+        const sessionId =
+            url.replace("ws://localhost:8080/ws/", "")
+                .replace("/websocket", "")
+                .replace(/^[0-9]+\//, "")
+                .replace(/^[0-9]+\//, "");
+
+
+        client.subscribe("/queue/specific-user-" + sessionId, (msg) => {
+            const message: any = JSON.parse(msg.body);
+            handleSocketUpdate();
+        });
+        client.send("/app/chat.addUser", {}, user?.nickname);
+    });
+
+    return () => {
+        if (client) {
+            client.disconnect();
+        }
+    };
+}, [user]);
+
+function handleSocketUpdate() {
+
+  console.log("Catched")
+
+}
+  
+  
 
   const handleChatSelect = (chat: ChatInterface) => {
     setSelectedChat(chat);

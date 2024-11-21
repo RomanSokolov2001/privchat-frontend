@@ -9,7 +9,6 @@ export interface ChatRequestDto {
 }
 
 export interface AcceptChatRequestDto {
-    requesterNickname: string
     requestedPublicKey: string
 }
 
@@ -26,4 +25,11 @@ export interface ChatInterface {
     requestedNickname: string
     requestedPublicKey: string
     requesterPublicKey: string
+}
+
+export interface ChatInterfaceDto {
+    requesterNickname: string | undefined
+    requestedNickname: string | undefined
+    requestedPublicKey: string | undefined
+    requesterPublicKey: string | undefined
 }
