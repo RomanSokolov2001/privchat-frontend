@@ -1,0 +1,16 @@
+.chat-block {
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+.chat-block:hover {
+    background-color: #e0e0e0;
+}
+
+.chat-block-text {
+    transition: transform 0.2s ease;
+}
+
+.chat-block:active .chat-block-text {
+    transform: scale(0.95);
+}
