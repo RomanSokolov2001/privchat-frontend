@@ -24,7 +24,7 @@ const AnimatedButton = ({text = '', onClick = () => console.log("")}:ButtonProps
       onMouseUp={() => setIsClicked(false)}
       onClick={onClick}
     >
-      Enter Pool
+      {text}
     </button>
   );
 };

@@ -12,11 +12,11 @@ export interface AcceptChatRequestDto {
     requestedPublicKey: string
 }
 
-export interface Message {
-    createdAt: Date
+export interface MessageInterface {
     content: string
     sender: string
     receiver: string
+    time: string
 }
 export const IP = '16.171.206.255:8080'
 export interface ChatInterface {

@@ -1,5 +1,5 @@
 import * as CryptoJS from 'crypto-js'
-import { Message } from '../types';
+import { MessageInterface } from '../types';
 
 
 const P = BigInt(23)
@@ -56,7 +56,7 @@ export const DiffieHellmanService = {
         return plainText
     },
 
-    decryptMessages(messages: Message[], secretKey: string) {
+    decryptMessages(messages: MessageInterface[], secretKey: string) {
         const decryptedMessages = messages.map((msg) => {
             msg.content = this.decrypt(msg.content, secretKey)
             return msg

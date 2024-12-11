@@ -12,7 +12,7 @@ const App: React.FC = () => {
       <UserProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<Messenger />} />
+            <Route path="/" element={<Login />} />
             <Route path="/messenger" element={<Messenger />} />
           </Routes>
         </Router>

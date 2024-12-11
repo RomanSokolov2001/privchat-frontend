@@ -35,7 +35,6 @@ export default Login;
 
 const LoginWindow = ({ handleLogin, setState, state }: { handleLogin: (e: React.FormEvent) => void, setState: Dispatch<SetStateAction<boolean>>, state: boolean }) => {
 
-  //  For mobile users
   async function runAnimation() {
     setState(true)
     await sleep(4000)
