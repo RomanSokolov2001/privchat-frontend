@@ -33,28 +33,11 @@ const LeftBar: React.FC = () => {
     }
   }, [isMobile, showSidebar, api]);
 
-  // Send chat request
-  async function handleSendingRequest() {
-    if (!user) return;
-    const response = await MessengerService.sendChatRequest(
-      { requestedNickname: searchTerm, requesterPublicKey: user.publicKey },
-      user.jwt
-    );
-    if (response === 'success') {
-      setSearchTerm('');
-    }
-  }
 
   // Render list of chats
   const renderChats = () => {
     return showedChats.map((chat: ChatInterface) => (
-      <li
-         // Ensure unique key for React list rendering
-        onClick={() => setCurrentChat(chat)}
-        className="cursor-pointer py-2 hover:bg-gray-100"
-      >
-        {getOpponentNickname(user, chat)}
-      </li>
+        <ChatBlock nickname={getOpponentNickname(user, chat)} onClick={() => setCurrentChat(chat)} />
     ));
   };
 
@@ -87,9 +70,7 @@ const LeftBar: React.FC = () => {
 
         {/* Chat Blocks for Demo */}
         <div className="w-full overflow-auto">
-          <ChatBlock nickname="MyFriend2943" />
-          <ChatBlock nickname="SuperPimkpin233" />
-          <ChatBlock nickname="DearBroad233" />
+    
         </div>
       </animated.div>
     </div>

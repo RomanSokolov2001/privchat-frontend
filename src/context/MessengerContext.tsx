@@ -15,6 +15,10 @@ interface MessengerContextType {
   setIsMobile: React.Dispatch<React.SetStateAction<boolean>>;
   screenSize: {width: number, height: number};
   chatWidth: number;
+  areTermsAccepted: boolean;
+  setTermsAccepted: React.Dispatch<React.SetStateAction<boolean>>;
+  expiredFiles: String[];
+  setExpiredFiles: React.Dispatch<React.SetStateAction<String[]>>;
 }
 
 
@@ -34,7 +38,9 @@ export const MessengerProvider: React.FC<MessengerProviderProps> = ({ children }
     width: window.innerWidth,
     height: window.innerHeight
   });
+  const [areTermsAccepted, setTermsAccepted] = useState(false)
   const [chatWidth, setChatWidth] = useState<number>(isMobile ? window.innerWidth : window.innerWidth - 250)
+  const [expiredFiles, setExpiredFiles] = useState<String[]>([])
 
 
   useEffect(() => {
@@ -55,7 +61,7 @@ export const MessengerProvider: React.FC<MessengerProviderProps> = ({ children }
   });
 
   return (
-    <MessengerContext.Provider value={{ messages, setMessages, chats, setChats, currentChat, setCurrentChat, showSidebar, setShowSidebar, isMobile, setIsMobile, screenSize, chatWidth }}>
+    <MessengerContext.Provider value={{ messages, setMessages, chats, setChats, currentChat, setCurrentChat, showSidebar, setShowSidebar, isMobile, setIsMobile, screenSize, chatWidth, areTermsAccepted, setTermsAccepted, expiredFiles, setExpiredFiles}}>
       {children}
     </MessengerContext.Provider >
   );

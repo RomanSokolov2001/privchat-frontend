@@ -1,17 +1,26 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthService } from "../api/AuthService";
 import DiffieHellmanService from "../api/DiffieHellmanService";
 import { useUser } from "../context/UserContext";
 import Button from "../components/Button";
 import { iconsRef } from "../utils/iconsRef";
+import Checkbox from "../components/checkbox/Checkbox";
+import { useMessenger } from "../context/MessengerContext";
+import Toast from "../components/Toast";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const { areTermsAccepted, setTermsAccepted } = useMessenger()
+  const [showToast, setShowToast] = useState(false)
   const { setUser } = useUser();
 
   const handleLogin = async (e: React.FormEvent) => {
+    if (!areTermsAccepted) {
+      setShowToast(true)
+      return
+    }
     e.preventDefault();
     try {
       const credentials = await AuthService.enterPool();
@@ -27,6 +36,11 @@ const Login: React.FC = () => {
   return (
     <Body>
       <LoginWindow handleLogin={handleLogin} setState={setShowInfoModal} state={showInfoModal} />
+      {showToast &&
+        <Toast isVisible={showToast} toggleVisible={() => setShowToast(!showToast)}
+          header={"Terms of Use Required"}
+          text={"You must agree to the Terms of Use before proceeding with authorization."}
+        />}
     </Body>
   );
 };
@@ -50,13 +64,14 @@ const LoginWindow = ({ handleLogin, setState, state }: { handleLogin: (e: React.
       <div className="flex flex-row justify-center items-center pb-40">
         <h2 className="text-2xl font-semibold text-center">PrivChat</h2>
         <div >
-        <Icon icon={iconsRef.info} setState={setState} onClick={runAnimation}/>
-         <InfoModal isVisible={state}/>
+          <Icon icon={iconsRef.info} setState={setState} onClick={runAnimation} />
+          <InfoModal isVisible={state} />
         </div>
-   
+
 
       </div>
       <Button text={"Enter Pool"} onClick={handleLogin} />
+      <TermsAndConditions />
     </WhiteFrame>
   );
 };
@@ -89,12 +104,12 @@ const Icon = ({ icon, setState, onClick }: { icon: string, setState: (state: boo
       onMouseEnter={() => setState(true)}
       onMouseLeave={() => setState(false)}
       onClick={onClick}
-      style={{cursor: 'pointer'}}
+      style={{ cursor: 'pointer' }}
     />
   );
 };
 
-const InfoModal = ({isVisible}:{isVisible: boolean}) => {
+const InfoModal = ({ isVisible }: { isVisible: boolean }) => {
   const [animationClass, setAnimationClass] = useState('')
 
   useEffect(() => {
@@ -130,5 +145,23 @@ const InfoModal = ({isVisible}:{isVisible: boolean}) => {
       </div>
     </>
 
+  );
+};
+
+const TermsAndConditions = () => {
+  const { areTermsAccepted, setTermsAccepted } = useMessenger()
+  function onClick() {
+    setTermsAccepted(!areTermsAccepted)
+  }
+  return (
+    <div className="flex flex-row items-center gap-5 pt-4">
+      <Checkbox state={areTermsAccepted} setState={onClick} />
+      <div>
+        <a>I have read and understand </a>
+        <Link to="/termofuse" className="text-blue-500 underline hover:text-blue-700">
+          Terms of Use
+        </Link>
+      </div>
+    </div>
   );
 };

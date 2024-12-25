@@ -1,35 +1,52 @@
+import { SetStateAction, useState } from "react";
+import { MessengerService } from "../../../api/MessengerService";
+import { useUser } from "../../../context/UserContext";
 import { iconsRef } from "../../../utils/iconsRef";
 import './styles.css'
 
 const SearchBar = () => {
+    const { user } = useUser()
+    const [input, setInput] = useState('')
 
-    function handleSearch() {
-
+    async function handleSendingRequest() {
+        if (!user) return;
+        const response = await MessengerService.sendChatRequest(
+            { requestedNickname: input, requesterPublicKey: user.publicKey },
+            user.jwt
+        );
+        if (response === 'success') {
+            setInput('');
+        }
     }
 
-    return (
-            <div className="flex flex-row pt-2 pb-2">
-                <div className="flex flex-row bg-[#f2f2f2] rounded-md search-container">
-                    <input
-                        placeholder="Nickname..."
-                        className="custom-input"
-                        style={{
-                            color: "black",
-                            backgroundColor: "#f2f2f2",
-                            // borderColor: '#4f4f4f',
-                            paddingLeft: "10px",
-                            paddingRight: "10px",
-                            paddingTop: '5px',
-                            paddingBottom: '5px',
-                            outline: "none",
-                            marginRight: "8px",
-                            width: 180,
-                        }}
-                    />
-                    <IconButton icon={iconsRef.plus} onClick={handleSearch} />
-                </div>
+    const handleChange = (event: { target: { value: SetStateAction<string>; }; }) => {
+        setInput(event.target.value);
+    };
 
+    return (
+        <div className="flex flex-row pt-2 pb-2">
+            <div className="flex flex-row bg-[#f2f2f2] rounded-md search-container">
+                <input
+                    value={input}
+                    onChange={handleChange}
+                    placeholder="Nickname..."
+                    className="custom-input"
+                    style={{
+                        color: "black",
+                        backgroundColor: "#f2f2f2",
+                        paddingLeft: "10px",
+                        paddingRight: "10px",
+                        paddingTop: '5px',
+                        paddingBottom: '5px',
+                        outline: "none",
+                        marginRight: "8px",
+                        width: 180,
+                    }}
+                />
+                <IconButton icon={iconsRef.plus} onClick={handleSendingRequest} />
             </div>
+
+        </div>
     );
 };
 

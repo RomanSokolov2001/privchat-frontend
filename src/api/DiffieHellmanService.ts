@@ -1,4 +1,4 @@
-import * as CryptoJS from 'crypto-js'
+import * as CryptoJS from 'crypto-js';
 import { MessageInterface } from '../types';
 
 
@@ -57,13 +57,68 @@ export const DiffieHellmanService = {
     },
 
     decryptMessages(messages: MessageInterface[], secretKey: string) {
+      
         const decryptedMessages = messages.map((msg) => {
+          if (!msg.content) return {}
+          
             msg.content = this.decrypt(msg.content, secretKey)
             return msg
         })
 
         return decryptedMessages
-    }
+    },
+
+    async encryptFile(file: File, secretKey: string): Promise<File> {
+        const reader = new FileReader();
+        return new Promise((resolve, reject) => {
+          reader.onload = () => {
+            try {
+              const fileData = reader.result as string;
+              const encryptedData = this.encrypt(fileData, secretKey);
+    
+              const encryptedBlob = new Blob([encryptedData], { type: file.type });
+              const encryptedFile = new File([encryptedBlob], `${file.name}.enc`, {
+                type: file.type,
+              });
+    
+              resolve(encryptedFile);
+            } catch (error) {
+              reject(error);
+            }
+          };
+    
+          reader.onerror = (error) => reject(error);
+          reader.readAsText(file);
+        });
+      },
+    
+      async decryptFile(encryptedFile: File, secretKey: string): Promise<File> {
+        const reader = new FileReader();
+        return new Promise((resolve, reject) => {
+          reader.onload = () => {
+            try {
+              const encryptedData = reader.result as string;
+              const decryptedData = this.decrypt(encryptedData, secretKey);
+      
+              // Remove timestamp from the file name
+              const removeTimestamp = (filename: string) => filename.replace(/^\d+_/, '');
+              const newFileName = removeTimestamp(encryptedFile.name.replace('.enc', ''));
+      
+              const decryptedBlob = new Blob([decryptedData], { type: encryptedFile.type });
+              const decryptedFile = new File([decryptedBlob], newFileName, {
+                type: encryptedFile.type,
+              });
+      
+              resolve(decryptedFile);
+            } catch (error) {
+              reject(error);
+            }
+          };
+      
+          reader.onerror = (error) => reject(error);
+          reader.readAsText(encryptedFile);
+        });
+      }
 }
 
 export default DiffieHellmanService;

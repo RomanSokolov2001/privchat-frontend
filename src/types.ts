@@ -13,12 +13,16 @@ export interface AcceptChatRequestDto {
 }
 
 export interface MessageInterface {
-    content: string
+    [x: string]: any
+    content?: string
     sender: string
     receiver: string
     time: string
+    fileEntry?: FileEntry
+    imageURLS?: string[]
+    randomId?: string
 }
-export const IP = '16.171.206.255:8080'
+export const IP = 'localhost:8080'
 export interface ChatInterface {
     requesterNickname: string
     requestedNickname: string
@@ -32,4 +36,22 @@ export interface ChatInterfaceDto {
     requestedNickname: string | undefined
     requestedPublicKey: string | undefined
     requesterPublicKey: string | undefined
+}
+
+export interface FileEntry {
+    fileType: string
+    filename: string
+    originalFilename: string
+    acceptedAt: number
+    size: string
+    receiver: string
+    sender: string
+}
+
+export interface MediaEntry {
+    filename: string
+    file: string
+    randomId: string
+    receiver: string
+    sender: string
 }

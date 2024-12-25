@@ -14,6 +14,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/messenger" element={<Messenger />} />
+            <Route path="/termandconditions" element={<Messenger />} />
           </Routes>
         </Router>
       </UserProvider>

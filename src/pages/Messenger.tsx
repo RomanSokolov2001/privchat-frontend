@@ -5,7 +5,7 @@ import { initializeWebSocket, disconnectWebSocket } from '../services/WebSocketS
 
 import { useUser } from '../context/UserContext';
 import { useMessenger } from '../context/MessengerContext';
-import { ChatInterface } from '../types';
+import { ChatInterface, FileEntry } from '../types';
 import { BACKEND_API } from '../config';
 
 import Header from '../components/Header';
@@ -45,33 +45,92 @@ const Messenger: React.FC = () => {
     setChats(updatedChats);
   };
 
-  const handleSocketUpdate = (wsMessage: any) => {
-    if (wsMessage.message == "request") {
+  const handleSocketUpdate = async (wsMessage: any) => {
+    if (wsMessage.type == "request") {
       loadChats();
       return
     }
-    const { sender, content: encryptedContent } = wsMessage.message || {};
-    if (!sender || !encryptedContent) return;
+    if (wsMessage.type == "file") {
+      const data: FileEntry = wsMessage.data
+      setMessages((prev) => [
+        ...prev,
+        {
+          fileEntry: data,
+          sender: data.sender,
+          receiver: data.receiver,
+          time: String(new Date()),
+        },
+      ]);
+    }
+    if (wsMessage.type == "message") {
+      const { sender, content: encryptedContent, receiver } = wsMessage.data || {};
+      if (!sender || !encryptedContent) return;
 
-    const chat = chatsRef.current.find(
-      (chat) => chat.requesterNickname === sender || chat.requestedNickname === sender
-    );
+      const chat = chatsRef.current.find(
+        (chat) => chat.requesterNickname === sender || chat.requestedNickname === sender
+      );
 
-    const sharedKey = chat?.sharedSecretKey;
-    if (!sharedKey || !user) return;  
+      const sharedKey = chat?.sharedSecretKey;
+      if (!sharedKey || !user) return;
 
-    const decryptedContent =  DiffieHellmanService.decrypt(encryptedContent, String(sharedKey));
-    if (!decryptedContent) return;
+      const decryptedContent = DiffieHellmanService.decrypt(encryptedContent, String(sharedKey));
+      if (!decryptedContent) return;
+      console.log('should be saved')
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: decryptedContent,
+          sender: sender,
+          receiver: receiver,
+          time: String(new Date()),
+        },
+      ]);
+    }
+    if (wsMessage.type == 'media') {
+      const chat = chatsRef.current.find(
+        (chat) => chat.requesterNickname === wsMessage.data.sender || chat.requestedNickname === wsMessage.data.sender
+      );
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        content: decryptedContent,
-        sender,
-        receiver: user.nickname,
-        time: String(new Date()),
-      },
-    ]);
+      const sharedKey = chat?.sharedSecretKey;
+      if (!sharedKey || !user) return;
+
+      const file = await MessengerService.downloadEncryptedMedia(wsMessage.data.originalFilename, sharedKey, user?.jwt, wsMessage.data.fileType)
+      
+
+      const imageURL = URL.createObjectURL(file)
+      setMessages((prevMessages) => {
+        const existingMessageIndex = prevMessages.findIndex(
+          (msg) => msg.randomId && (msg.randomId === wsMessage.data.randomId)
+        );
+    
+        if (existingMessageIndex !== -1) {
+          console.log('Existing msg')
+
+          const updatedMessages = [...prevMessages];
+          const existingMessage = updatedMessages[existingMessageIndex];
+
+          updatedMessages[existingMessageIndex] = {
+            ...existingMessage,
+            imageURLS: [...(existingMessage.imageURLS || []), imageURL],
+          };
+          return updatedMessages;
+        } else {
+          console.log('New msg')
+          return [
+            ...prevMessages,
+            {
+              randomId: wsMessage.data.randomId,
+              content: "",
+              sender: wsMessage.data.sender,
+              receiver: wsMessage.data.receiver,
+              time: String(new Date()),
+              imageURLS: [imageURL],
+            },
+          ];
+        }
+      });
+    }
+
   };
 
   return (
@@ -80,7 +139,7 @@ const Messenger: React.FC = () => {
         userNickname={user?.nickname}
         chatNickname={currentChat ? getOpponentNickname(user, currentChat) : 'No chat selected'}
       />
-     <Body/>
+      <Body />
     </div>
   );
 };

@@ -2,11 +2,13 @@ import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 
 export const initializeWebSocket = (url: string, onMessageReceived: (msg: any) => void, nickname: string) => {
-  const socket = new SockJS(`http://${url}/ws`);
+  const socket = new SockJS(`http://${url}:8080/ws`);
   const client = Stomp.over(socket);
 
   client.connect({}, () => {
-    const sessionId = extractSessionId(client.ws._transport.url);
+    const sessionUrl = client.ws._transport.url;
+    const sessionId = extractSessionId(sessionUrl);
+
     client.subscribe(`/queue/specific-user-${sessionId}`, (msg) => {
       onMessageReceived(JSON.parse(msg.body));
     });
@@ -22,8 +24,9 @@ export const disconnectWebSocket = (client: any) => {
   }
 };
 
-const extractSessionId = (url: string): string => {
-  return url.replace(`ws://${url}/ws/`, '')
-            .replace('/websocket', '')
-            .replace(/^[0-9]+\//g, '');
+const extractSessionId = (sessionUrl: string): string => {
+  console.log(sessionUrl)
+  const parts = sessionUrl.split('/');
+
+  return `${parts[parts.length - 2]}`;
 };
