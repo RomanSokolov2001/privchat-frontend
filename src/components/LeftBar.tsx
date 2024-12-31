@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { animated, useSpring } from '@react-spring/web';
-import { MessengerService } from '../api/MessengerService';
+import { MessengerAPI } from '../api/MessengerAPI';
 import { useUser } from '../context/UserContext';
 import { ChatInterface } from '../types';
 import { useMessenger } from '../context/MessengerContext';
@@ -47,7 +47,7 @@ const LeftBar: React.FC = () => {
       style={{ zIndex: 999, height: `${screenSize.height - 80}px`,}}
     >
       <animated.div
-        className={`w-[250px] p-2 border-r border-gray-300 flex flex-col items-center bg-white shadow-xl ${
+        className={`w-[250px] p-2 border-r border-gray-300 flex flex-col items-center bg-white shadow-xl z-500 ${
           isMobile ? 'absolute h-full' : 'h-full left-[10px]'
         }`}
         style={{
@@ -67,10 +67,10 @@ const LeftBar: React.FC = () => {
             <p className="text-center text-gray-500">No chats available</p>
           )}
         </div>
-
+          
         {/* Chat Blocks for Demo */}
         <div className="w-full overflow-auto">
-    
+          
         </div>
       </animated.div>
     </div>

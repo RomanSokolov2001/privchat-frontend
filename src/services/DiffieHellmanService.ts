@@ -5,8 +5,6 @@ import { MessageInterface } from '../types';
 const P = BigInt(23)
 const g = BigInt(2)
 
-
-
 export const DiffieHellmanService = {
     generateSecret() {
         const randomKey = BigInt(Math.floor(Math.random() * Number(P - g) + 1));
@@ -68,6 +66,7 @@ export const DiffieHellmanService = {
         return decryptedMessages
     },
 
+    // Unused
     async encryptFile(file: File, secretKey: string): Promise<File> {
         const reader = new FileReader();
         return new Promise((resolve, reject) => {
@@ -92,6 +91,7 @@ export const DiffieHellmanService = {
         });
       },
     
+      // Unused
       async decryptFile(encryptedFile: File, secretKey: string): Promise<File> {
         const reader = new FileReader();
         return new Promise((resolve, reject) => {
@@ -100,7 +100,6 @@ export const DiffieHellmanService = {
               const encryptedData = reader.result as string;
               const decryptedData = this.decrypt(encryptedData, secretKey);
       
-              // Remove timestamp from the file name
               const removeTimestamp = (filename: string) => filename.replace(/^\d+_/, '');
               const newFileName = removeTimestamp(encryptedFile.name.replace('.enc', ''));
       

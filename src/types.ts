@@ -22,7 +22,6 @@ export interface MessageInterface {
     imageURLS?: string[]
     randomId?: string
 }
-export const IP = 'localhost:8080'
 export interface ChatInterface {
     requesterNickname: string
     requestedNickname: string

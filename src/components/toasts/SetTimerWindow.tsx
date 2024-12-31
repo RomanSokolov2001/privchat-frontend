@@ -1,9 +1,13 @@
 import { animated, useSpring } from "@react-spring/web";
 import { useEffect } from "react";
+import { useMessenger } from "../../context/MessengerContext";
 
-const Toast = ({isVisible, toggleVisible, header, text}:{isVisible:boolean, toggleVisible: () => void, text: string, header: string}) => {
+const SetTimerWindow = () => {
+    const { showSetTimerWindow, setShowSetTimerWindow} = useMessenger()
+
+    
     const [springs, api] = useSpring(() => ({
-        opacity: isVisible ? 0 : 1,
+        opacity: showSetTimerWindow ? 0 : 1,
         config: { tension: 400, friction: 20 },
       }));
     
@@ -14,7 +18,7 @@ const Toast = ({isVisible, toggleVisible, header, text}:{isVisible:boolean, togg
 
     function onClose() {
         api.start({ opacity: 0 });
-        toggleVisible()
+        setShowSetTimerWindow(true)
     }
       
     return (
@@ -24,11 +28,11 @@ const Toast = ({isVisible, toggleVisible, header, text}:{isVisible:boolean, togg
         onClick={onClose}
       >
         <div className="bg-white rounded-xl p-6 shadow-xl text-center">
-          <h2 className="text-xl font-bold mb-2">{header}</h2>
-          <p className="text-gray-600">{text}</p>
+          <h2 className="text-xl font-bold mb-2">Set Self-Destruct Timer</h2>
+          <p className="text-gray-600">LolOlololo</p>
         </div>
       </animated.div>
     )
 }
 
-export default Toast
+export default SetTimerWindow

@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AuthService } from "../api/AuthService";
-import DiffieHellmanService from "../api/DiffieHellmanService";
+import { AuthAPI } from "../api/AuthAPI";
+import DiffieHellmanService from "../services/DiffieHellmanService";
 import { useUser } from "../context/UserContext";
 import Button from "../components/Button";
 import { iconsRef } from "../utils/iconsRef";
@@ -9,7 +9,7 @@ import Checkbox from "../components/checkbox/Checkbox";
 import { useMessenger } from "../context/MessengerContext";
 import Toast from "../components/Toast";
 
-const Login: React.FC = () => {
+const Login = ({setAuthenticated}: any) => {
   const navigate = useNavigate();
   const [showInfoModal, setShowInfoModal] = useState(false);
   const { areTermsAccepted, setTermsAccepted } = useMessenger()
@@ -23,9 +23,10 @@ const Login: React.FC = () => {
     }
     e.preventDefault();
     try {
-      const credentials = await AuthService.enterPool();
+      const credentials = await AuthAPI.enterPool();
       const { publicKey, secret } = DiffieHellmanService.handleGenerateKeys();
-      setUser({ jwt: credentials.token, nickname: credentials.nickname, publicKey, secretKey: String(secret) });
+      setUser({ jwt: credentials.token, nickname: credentials.nickname, publicKey, secretKey: String(secret), expiresIn: credentials.expiresIn });
+      setAuthenticated(true)
       navigate("/messenger");
     } catch (error) {
       console.error("Login failed:", error);
@@ -67,8 +68,6 @@ const LoginWindow = ({ handleLogin, setState, state }: { handleLogin: (e: React.
           <Icon icon={iconsRef.info} setState={setState} onClick={runAnimation} />
           <InfoModal isVisible={state} />
         </div>
-
-
       </div>
       <Button text={"Enter Pool"} onClick={handleLogin} />
       <TermsAndConditions />

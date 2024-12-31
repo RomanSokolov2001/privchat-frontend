@@ -5,8 +5,10 @@ interface User {
   nickname: string;
   email?: string;
   jwt: string;
-  secretKey: string
-  publicKey: string
+  secretKey: string;
+  publicKey: string;
+  expiresIn: number;
+  invitationLink?: string;
 }
 
 interface UserContextType {

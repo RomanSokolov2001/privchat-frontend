@@ -1,5 +1,5 @@
 import { SetStateAction, useState } from "react";
-import { MessengerService } from "../../../api/MessengerService";
+import { MessengerAPI } from "../../../api/MessengerAPI";
 import { useUser } from "../../../context/UserContext";
 import { iconsRef } from "../../../utils/iconsRef";
 import './styles.css'
@@ -10,7 +10,7 @@ const SearchBar = () => {
 
     async function handleSendingRequest() {
         if (!user) return;
-        const response = await MessengerService.sendChatRequest(
+        const response = await MessengerAPI.sendChatRequest(
             { requestedNickname: input, requesterPublicKey: user.publicKey },
             user.jwt
         );

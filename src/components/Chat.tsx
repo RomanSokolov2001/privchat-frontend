@@ -4,7 +4,8 @@ import { useMessenger } from '../context/MessengerContext';
 import { getOpponentNickname } from '../utils/functions';
 import MessageFabric from './Message';
 import { MessageInterface } from '../types';
-import { MessengerService } from '../api/MessengerService';
+import { MessengerAPI } from '../api/MessengerAPI';
+import { FileSharingAPI } from '../api/FileSharingAPI';
 
 
 const Chat = () => {
@@ -14,7 +15,6 @@ const Chat = () => {
   const [chatMessages, setChatMessages] = useState<any>([])
   const [message, setMessage] = useState('');
   const [opponentNickname, setOpponentNickname] = useState<string>('')
-
 
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const Chat = () => {
 
   async function handleFileDownload(filename: string, fileType: string) {
     if (!currentChat || !user) return
-    const file = await MessengerService.downloadEncryptedFile(filename, String(currentChat?.sharedSecretKey), user?.jwt, fileType)
+    await FileSharingAPI.downloadEncryptedFile(filename, String(currentChat?.sharedSecretKey), user?.jwt, fileType)
   }
 
   return (
@@ -52,9 +52,10 @@ const Chat = () => {
       {chatMessages.map((message: MessageInterface, index: Key) => {
         return (
           <MessageFabric
+            id={message.id}
             imageURLS={message.imageURLS}
             key={index}
-            time={message.time}
+            createdAt={message.time}
             text={message.content}
             fileEntry={message.fileEntry}
             isOnLeft={user?.nickname === message.receiver}

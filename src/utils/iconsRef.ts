@@ -7,6 +7,7 @@ export const iconsRef = {
     fileBlack: '/assets/icons/fileBlack.svg',
     fileWhite: '/assets/icons/fileWhite.svg',
     clocksBlack: '/assets/gifs/clocksBlack.gif',
-    clocksWhite: '/assets/gifs/clocksWhite.gif'
-
+    clocksWhite: '/assets/gifs/clocksWhite.gif',
+    profile: '/assets/icons/profile.svg',
+    clocks: '/assets/icons/clocks.svg'
 }

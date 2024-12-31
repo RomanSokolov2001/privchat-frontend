@@ -2,9 +2,9 @@ import { useMessenger } from "../context/MessengerContext"
 import Chat from "./Chat"
 import LeftBar from "./LeftBar"
 import MessageInput from "./MessageInput"
+import SetTimerWindow from "./toasts/SetTimerWindow"
 
 const Body = () => {
-    const { isMobile, showSidebar, currentChat } = useMessenger()
 
     return (
         <div className="flex flex-row bg-[#ebebeb] w-full h-full">
@@ -15,6 +15,7 @@ const Body = () => {
                 <div className='w-full flex-col'>
                     <Chat />
                     <MessageInput />
+                    {/* <SetTimerWindow/> */}
                 </div> : <div>Select a chat to start messaging</div>
                 }
 
