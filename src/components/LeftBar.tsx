@@ -10,7 +10,7 @@ import ChatBlock from './animated/chatBlock/ChatBlock';
 
 const LeftBar: React.FC = () => {
   const { user } = useUser();
-  const { chats, setCurrentChat, isMobile, screenSize, showSidebar } = useMessenger();
+  const { chats, setChats, setCurrentChat, isMobile, screenSize, showSidebar } = useMessenger();
   const [searchTerm, setSearchTerm] = useState('');
   const [showedChats, setShowedChats] = useState<ChatInterface[]>([]);
 
@@ -33,11 +33,20 @@ const LeftBar: React.FC = () => {
     }
   }, [isMobile, showSidebar, api]);
 
+  function handleClick (chat: ChatInterface) {
+    const updatedChats = chats.map((ch) => {
+      if (chat.sharedSecretKey == ch.sharedSecretKey) {
+        return {...ch, unreads: 0}
+      } else return ch
+    })
+    setChats(updatedChats)
+    setCurrentChat(chat)  
+  }
 
   // Render list of chats
   const renderChats = () => {
     return showedChats.map((chat: ChatInterface) => (
-        <ChatBlock nickname={getOpponentNickname(user, chat)} onClick={() => setCurrentChat(chat)} />
+        <ChatBlock nickname={getOpponentNickname(user, chat)} onClick={() => handleClick(chat)} unreads={chat.unreads}/>
     ));
   };
 

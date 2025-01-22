@@ -21,6 +21,7 @@ export interface MessageInterface {
     fileEntry?: FileEntry
     imageURLS?: string[]
     randomId?: string
+    expiresAt: number
 }
 export interface ChatInterface {
     requesterNickname: string
@@ -28,6 +29,8 @@ export interface ChatInterface {
     requestedPublicKey: string
     requesterPublicKey: string
     sharedSecretKey: string
+    timer: number
+    unreads: number
 }
 
 export interface ChatInterfaceDto {

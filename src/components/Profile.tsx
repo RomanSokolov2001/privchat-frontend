@@ -3,6 +3,7 @@ import { useMessenger } from "../context/MessengerContext";
 import { animated, useSpring } from "@react-spring/web";
 import { useUser } from "../context/UserContext";
 import { BASE_URL, FRONTEND_URL} from "../config";
+import { MessengerAPI } from "../api/MessengerAPI";
 
 const Profile = () => {
   const { showProfile, setShowProfile } = useMessenger();

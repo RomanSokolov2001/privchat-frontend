@@ -5,6 +5,8 @@ import { ChatInterface, MessageInterface } from '../types';
 interface MessengerContextType {
   messages: MessageInterface[];
   setMessages: React.Dispatch<React.SetStateAction<MessageInterface[]>>;
+  messagesWithTimer: any[];
+  setMessagesWithTimer: React.Dispatch<React.SetStateAction<any[]>>;
   chats: ChatInterface[];
   setChats: React.Dispatch<React.SetStateAction<ChatInterface[]>>;
   currentChat: ChatInterface | null;
@@ -34,6 +36,8 @@ interface MessengerProviderProps {
 
 export const MessengerProvider: React.FC<MessengerProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<MessageInterface[]>([])
+  const [messagesWithTimer, setMessagesWithTimer] = useState<any[]>([])
+
   const [chats, setChats] = useState<ChatInterface[]>([])
   const [currentChat, setCurrentChat] = useState<ChatInterface | null>(null);
   const [showSidebar, setShowSidebar] = useState<any>(null)
@@ -44,7 +48,7 @@ export const MessengerProvider: React.FC<MessengerProviderProps> = ({ children }
     height: window.innerHeight
   });
   const [showSetTimerWindow, setShowSetTimerWindow] = useState(false)
-  const [areTermsAccepted, setTermsAccepted] = useState(false)
+  const [areTermsAccepted, setTermsAccepted] = useState(true)
   const [chatWidth, setChatWidth] = useState<number>(isMobile ? window.innerWidth : window.innerWidth - 250)
   const [expiredFiles, setExpiredFiles] = useState<String[]>([])
 
@@ -67,7 +71,7 @@ export const MessengerProvider: React.FC<MessengerProviderProps> = ({ children }
   });
 
   return (
-    <MessengerContext.Provider value={{ messages, setMessages, chats, setChats, currentChat, setCurrentChat, showSidebar, setShowSidebar, showProfile, setShowProfile, isMobile, setIsMobile, screenSize, chatWidth, areTermsAccepted, setTermsAccepted, expiredFiles, setExpiredFiles, showSetTimerWindow, setShowSetTimerWindow}}>
+    <MessengerContext.Provider value={{ messages, setMessages, messagesWithTimer, setMessagesWithTimer, chats, setChats, currentChat, setCurrentChat, showSidebar, setShowSidebar, showProfile, setShowProfile, isMobile, setIsMobile, screenSize, chatWidth, areTermsAccepted, setTermsAccepted, expiredFiles, setExpiredFiles, showSetTimerWindow, setShowSetTimerWindow}}>
       {children}
     </MessengerContext.Provider >
   );

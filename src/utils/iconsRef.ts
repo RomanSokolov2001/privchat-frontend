@@ -9,5 +9,7 @@ export const iconsRef = {
     clocksBlack: '/assets/gifs/clocksBlack.gif',
     clocksWhite: '/assets/gifs/clocksWhite.gif',
     profile: '/assets/icons/profile.svg',
-    clocks: '/assets/icons/clocks.svg'
+    clocks: '/assets/icons/clocks.svg',
+    tick: '/assets/icons/tick.svg',
+    tickDouble: '/assets/icons/tick-double.svg'
 }

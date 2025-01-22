@@ -8,7 +8,7 @@ import Button from "../components/Button";
 import Checkbox from "../components/checkbox/Checkbox";
 import { useMessenger } from "../context/MessengerContext";
 import Toast from "../components/Toast";
-import { MessengerAPI } from "../api/MessengerAPI";
+
 
 const InvitationHandler = ({ setAuthenticated }: { setAuthenticated: (value: boolean) => void }) => {
   const navigate = useNavigate();
@@ -19,7 +19,6 @@ const InvitationHandler = ({ setAuthenticated }: { setAuthenticated: (value: boo
 
   // Extract invitation info from the invite code
   const decodedInviteCode = React.useMemo(() => {
-    console.log(invitationCode)
     if (!invitationCode) {
       return { nickname: '', isValid: false };
     }

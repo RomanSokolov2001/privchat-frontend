@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { timeAgo } from '../utils/functions';
+import { getStringFromMs, timeAgo } from '../utils/functions';
 import { iconsRef } from '../utils/iconsRef';
 import { FileEntry } from '../types';
 import { animated, useSpring } from '@react-spring/web';
@@ -12,7 +12,12 @@ interface MessageProps {
   isLast: boolean;
   fileEntry?: FileEntry;
   downloadFile?: (filename: string, fileType: string) => void;
-  imageURLS?: string[];
+  imageURL?: string;
+  type: string;
+  sender?: string;
+  receiver?: string;
+  isRecieved?: string;
+  isWatched?: string;
 }
 
 const MessageFabric: React.FC<MessageProps> = ({
@@ -23,10 +28,15 @@ const MessageFabric: React.FC<MessageProps> = ({
   isLast,
   fileEntry,
   downloadFile,
-  imageURLS,
+  imageURL,
+  type,
+  sender,
+  receiver,
+  isRecieved,
+  isWatched,
 }) => {
-  if (imageURLS && imageURLS.length > 0)
-    return <MediaMessage id={id} createdAt={createdAt} isOnLeft={isOnLeft} isLast={isLast} imageURLS={imageURLS} />;
+  if (imageURL)
+    return <MediaMessage id={id} createdAt={createdAt} isOnLeft={isOnLeft} isLast={isLast} imageURL={imageURL} type={type} isRecieved={isRecieved} isWatched={isWatched} />;
   if (fileEntry)
     return (
       <FileMessage
@@ -36,15 +46,18 @@ const MessageFabric: React.FC<MessageProps> = ({
         isLast={isLast}
         fileEntry={fileEntry}
         downloadFile={downloadFile}
+        type={type}
       />
     );
-  return <TextMessage id={id} createdAt={createdAt} isOnLeft={isOnLeft} isLast={isLast} text={text} />;
+
+  if (type == 'timer') return <TimerMessage id={id} createdAt={createdAt} isOnLeft={isOnLeft} isLast={isLast} text={text} sender={sender} type={type} isRecieved={isRecieved} isWatched={isWatched} />
+  return <TextMessage id={id} createdAt={createdAt} isOnLeft={isOnLeft} isLast={isLast} text={text} type={type} isRecieved={isRecieved} isWatched={isWatched} />;
 };
 
 export default MessageFabric;
 
 // Subcomponent: MediaMessage
-const MediaMessage: React.FC<MessageProps> = ({ id, createdAt, isOnLeft, isLast, imageURLS }) => {
+const MediaMessage: React.FC<MessageProps> = ({ id, createdAt, isOnLeft, isLast, imageURL }) => {
   const [springs, api] = useSpring(() => ({
     opacity: 0,
     config: { tension: 400, friction: 20 },
@@ -57,28 +70,18 @@ const MediaMessage: React.FC<MessageProps> = ({ id, createdAt, isOnLeft, isLast,
 
   return (
     <animated.div style={{ ...springs }}
-      className={`mt-1 mb-1 p-[8px] ${isOnLeft ? '' : 'flex items-end'} flex-col ${isLast && 'pb-10'
+      className={`mt-1 mb-1 p-[8px] ${isOnLeft ? 'flex items-start' : 'flex items-end'} flex-col ${isLast && 'pb-10'
         }`}
     >
       <section
-        className={`p-2 rounded-3xl inline-block max-w-[400px] shadow-xl ${isOnLeft ? 'bg-white text-black' : 'bg-black text-white'
-          }`}
+        className={`shadow-xl`}
       >
-        <div
-          className="grid gap-2"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${Math.min(imageURLS!.length, 3)}, 1fr)`, // Max 3 columns
-          }}
-        >
-          {imageURLS?.map((url: string) => (
-            <img
-              src={url}
-              className="rounded-md cursor-pointer hover:scale-105 transition-transform"
-              style={{ width: '100px', height: '100px', maxHeight: '150px', objectFit: 'cover' }}
-            />
-          ))}
-        </div>
+
+        <img
+          src={imageURL}
+          className="rounded-md"
+          style={{ width: '100%', objectFit: 'cover' }}
+        />
       </section>
       <section
         className={`text-[14px] font-black text-bold pl-3 pr-3 ${isOnLeft ? '' : 'flex justify-end'
@@ -91,7 +94,7 @@ const MediaMessage: React.FC<MessageProps> = ({ id, createdAt, isOnLeft, isLast,
 };
 
 // Subcomponent: TextMessage
-const TextMessage: React.FC<MessageProps> = ({ id, createdAt, text, isOnLeft, isLast }) => {
+const TextMessage: React.FC<MessageProps> = ({ id, createdAt, text, isOnLeft, isLast, isRecieved, isWatched }) => {
   const [springs, api] = useSpring(() => ({
     opacity: 0,
     config: { tension: 400, friction: 20 },
@@ -102,17 +105,30 @@ const TextMessage: React.FC<MessageProps> = ({ id, createdAt, text, isOnLeft, is
 
   }, [api])
 
+  function getTick() {
+    if (true) return (
+      <Icon icon={iconsRef.tickDouble} w={35} h={30}/>
+    )
+    if (isWatched) return ( 
+      <Icon icon={iconsRef.tick} />
+    )
+
+  }
+
   return (
     <animated.div style={{ ...springs }}
       className={`mt-1 mb-1 p-[8px] ${isOnLeft ? '' : 'flex items-end'} flex-col ${isLast && 'pb-10'
         }`}
     >
-      <section
-        className={`p-2 pl-5 pr-5 rounded-3xl inline-block max-w-[400px] break-words text-[25px] shadow-xl ${isOnLeft ? 'bg-white text-black' : 'bg-black text-white'
-          }`}
-      >
-        {text}
+      <section className='flex'>
+        {getTick()}
+        <div className={`p-2 pl-5 pr-5 rounded-3xl inline-block max-w-[400px] break-words text-[25px] shadow-xl ${isOnLeft ? 'bg-white text-black' : 'bg-black text-white'
+          }`}>
+          {text}
+
+        </div>
       </section>
+
       <section
         className={`text-[14px] font-black text-bold pl-3 pr-3 ${isOnLeft ? '' : 'flex justify-end'
           }`}
@@ -127,7 +143,7 @@ const TextMessage: React.FC<MessageProps> = ({ id, createdAt, text, isOnLeft, is
 const FileMessage: React.FC<MessageProps> = ({ id, createdAt, isOnLeft, isLast, fileEntry, downloadFile }) => {
   const [expired, setExpired] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
-  
+
   const [springs, api] = useSpring(() => ({
     opacity: 0,
     config: { tension: 400, friction: 20 },
@@ -139,6 +155,7 @@ const FileMessage: React.FC<MessageProps> = ({ id, createdAt, isOnLeft, isLast, 
   }, [api])
 
   useEffect(() => {
+    console.log(isLast)
     if (!fileEntry) return;
 
     const timeRemaining = Math.max(0, fileEntry.acceptedAt + 5 * 60 * 1000 - Date.now());
@@ -175,7 +192,7 @@ const FileMessage: React.FC<MessageProps> = ({ id, createdAt, isOnLeft, isLast, 
           }`}
       >
         <section
-          className={`p-2 pl-5 pr-5 rounded-3xl inline-block max-w-[400px] shadow-xl relative hover:scale-105 transition-transform duration-300 ease-in-out cursor-pointer ${isOnLeft ? 'bg-white text-black' : 'bg-black text-white'
+          className={`p-2 pl-2 pr-5 rounded-3xl inline-block min-w-[210px] max-w-[400px] shadow-xl relative hover:scale-105 transition-transform duration-300 ease-in-out cursor-pointer ${isOnLeft ? 'bg-white text-black' : 'bg-black text-white'
             }`}
           onClick={() => downloadFile(fileEntry.filename, fileEntry.fileType)}
         >
@@ -191,23 +208,25 @@ const FileMessage: React.FC<MessageProps> = ({ id, createdAt, isOnLeft, isLast, 
               </a>
             </div>
           </div>
-          <div className="flex flex-row align-center items-end justify-center absolute right-2 bottom-2">
-            {!expired && timeLeft && (
+          {!expired && timeLeft && (
+            <div className="flex flex-row align-center items-end justify-center absolute right-2 bottom-2">
+
               <span
                 className={`text-[14px] ${isOnLeft ? 'text-[#5c5c5c]' : 'text-[#c9c9c9]'
                   }`}
               >
                 {timeLeft}
               </span>
-            )}
-            <img
-              src={isOnLeft ? iconsRef.clocksBlack : iconsRef.clocksWhite}
-              alt="Clock icon"
-              width={25}
-              height={25}
-              className="ml-2"
-            />
-          </div>
+              <img
+                src={isOnLeft ? iconsRef.clocksBlack : iconsRef.clocksWhite}
+                alt="Clock icon"
+                width={25}
+                height={25}
+                className="ml-2"
+              />
+            </div>
+          )}
+
         </section>
         <section
           className={`text-[14px] font-black text-bold pl-3 pr-3 ${isOnLeft ? '' : 'flex justify-end'
@@ -218,6 +237,37 @@ const FileMessage: React.FC<MessageProps> = ({ id, createdAt, isOnLeft, isLast, 
       </animated.div>
     );
   else return <li></li>;
+};
+
+// Subcomponent: TextMessage
+const TimerMessage: React.FC<MessageProps> = ({ id, createdAt, text, isLast, sender }) => {
+  const [springs, api] = useSpring(() => ({
+    opacity: 0,
+    config: { tension: 400, friction: 20 },
+  }));
+
+  useEffect(() => {
+    console.log(isLast)
+    api.start({ opacity: 1 });
+
+  }, [api])
+
+  return (
+    <animated.div style={{ ...springs }}
+      className={`mt-1 mb-1 p-[8px] flex flex-col items-center w-full ${isLast && 'pb-[100px]'}`}
+    >
+      <section
+        style={{ background: 'rgba(0, 0, 0, 0.1)' }}
+        className={` pl-5 pr-5 rounded-3xl break-words text-[30px] text-black`}
+      >
+        <a className='font-bold'>{sender} </a>
+        set self-destruct timer to
+        <a className='font-bold'> {getStringFromMs(text)}</a>
+
+      </section>
+
+    </animated.div>
+  );
 };
 
 // Helper Icon Component

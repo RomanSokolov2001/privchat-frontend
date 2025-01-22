@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMessenger } from '../context/MessengerContext';
 import AnimatedButton from './Button';
 import { getOpponentNickname } from '../utils/functions';
@@ -11,19 +11,27 @@ import { FileSharingAPI } from '../api/FileSharingAPI';
 const MessageInput = () => {
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedMedia, setSelectedMedia] = useState<File[]>([]);
+  const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
   const { user } = useUser();
   const { chatWidth, currentChat, setShowSetTimerWindow } = useMessenger();
+  const [currentChatTimer, setCurrentChatTimer] = useState(0)
+
+  useEffect(()=> {
+    console.log('trigger')
+    if (currentChat && currentChat.timer) {setCurrentChatTimer(currentChat?.timer)} else {console.log('to timer')}
+    
+  }, [currentChat])
 
   async function sendMessage() {
     if (!user || !currentChat) return;
+
     if (!selectedFile && message.trim()) {
       await MessengerAPI.sendMessage(
         getOpponentNickname(user, currentChat),
         message,
         String(currentChat.sharedSecretKey),
         user.jwt,
-
+        currentChatTimer && new Date().getTime() + Number(currentChat.timer)
       );
       setMessage('');
     } else if (selectedFile) {
@@ -31,17 +39,19 @@ const MessageInput = () => {
         selectedFile,
         String(currentChat.sharedSecretKey),
         user.jwt,
-        getOpponentNickname(user, currentChat)
+        getOpponentNickname(user, currentChat),
+        currentChatTimer && new Date().getTime() + Number(currentChat.timer)
       );
       setSelectedFile(null);
-    } else if (selectedMedia.length > 0) {
+    } else if (selectedMedia) {
       await FileSharingAPI.uploadEncryptedMedia(
         selectedMedia,
         String(currentChat.sharedSecretKey),
         user.jwt,
-        getOpponentNickname(user, currentChat)
+        getOpponentNickname(user, currentChat),
+        currentChatTimer && new Date().getTime() + Number(currentChat.timer)
       );
-      setSelectedMedia([]);
+      setSelectedMedia(null);
     }
   }
 
@@ -66,30 +76,21 @@ const MessageInput = () => {
 
     const input = document.createElement('input');
     input.type = 'file';
-    input.multiple = true; // Allow multiple file selection
-    input.accept = 'image/*'; // Restrict to image files
+    input.accept = 'image/*';
     input.onchange = (event: Event) => {
       const target = event.target as HTMLInputElement;
-      if (target.files) {
-        const filesArray = Array.from(target.files);
-        setSelectedMedia(filesArray);
-        console.log('Selected media:', filesArray);
+      if (target.files && target.files[0]) {
+        const file = target.files[0];
+        setSelectedMedia(file);
+        console.log('Selected media:', file);
       }
     };
     input.click();
   }
 
-  function clearSelectedMedia() {
-    setSelectedMedia([]);
-  }
-
   function clearSelectedFile() {
     setSelectedFile(null);
     setMessage('');
-  }
-
-  function handleTimerSet () {
-
   }
 
   return (
@@ -122,7 +123,7 @@ const MessageInput = () => {
               disabled={!!selectedFile} // Disable input when a file is selected
             />
           )}
-          <div className="flex flex-row gap-2 max-h-[40px] pl-2">
+          <div className="flex flex-row gap-2 max-h-[40px] mr-[2px] absolute right-[-2px] bottom-[2px]">
             <Icon icon={iconsRef.clocks} onClick={()=> setShowSetTimerWindow(true)} />
             <Icon icon={iconsRef.photo} onClick={handleMediaSelect} />
             <Icon icon={iconsRef.clip} w={35} h={35} onClick={handleFileSelect} />

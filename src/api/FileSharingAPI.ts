@@ -1,21 +1,28 @@
 import axios from "axios";
 import DiffieHellmanService from "../services/DiffieHellmanService";
 import FileService from "../services/FileService";
-import { generateRandomId } from "../utils/functions";
+import { generateRandomId, getFileNameWithoutExtension } from "../utils/functions";
 import { BASE_URL } from "../config";
 
 
 export const FileSharingAPI = {
-    async uploadEncryptedFile(file: File, secretKey: string, jwt: string, receiver: string) {
+    async uploadEncryptedFile(file: File, secretKey: string, jwt: string, receiver: string, expiresAt?: number) {
         try {
             const { content, fileType } = await FileService.fileToString(file);
             const encryptedContent = DiffieHellmanService.encrypt(content, secretKey)
             const encryptedFileTxt = FileService.stringToTextFile(encryptedContent, file.name)
+            const randomId = generateRandomId()
 
             const formData = new FormData();
             formData.append("file", encryptedFileTxt);
             formData.append("receiver", receiver);
             formData.append("fileType", fileType)
+            formData.append('id', randomId)
+            
+            formData.append("expiresAt", expiresAt ? String(expiresAt): '')
+
+
+            console.log("Encrypted file downloaded and decrypted successfully!");
 
             const response = await axios.post(`${BASE_URL}/encrypt-files/files`, formData, {
                 headers: {
@@ -44,7 +51,7 @@ export const FileSharingAPI = {
             const encryptedFileTxt = new File([blob], filename, { type: 'text/plain' });
             const encryptedString = await FileService.textFileToString(encryptedFileTxt)
             const decryptedString = DiffieHellmanService.decrypt(encryptedString, String(secretKey))
-            const decryptedFile = FileService.stringToFile(decryptedString, filename, fileType)
+            const decryptedFile = FileService.stringToFile(decryptedString, getFileNameWithoutExtension(filename), fileType)
 
             console.log("Encrypted file downloaded and decrypted successfully!");
             FileService.saveFileToClient(decryptedFile);
@@ -53,20 +60,21 @@ export const FileSharingAPI = {
             throw error;
         }
     },
-    async uploadEncryptedMedia(images: File[], secretKey: string, jwt: string, receiver: string) {
+    async uploadEncryptedMedia(image: File, secretKey: string, jwt: string, receiver: string, expiresAt?: number) {
         const randomId = generateRandomId()
-        images.forEach(async img => {
             try {
-                const { content, fileType } = await FileService.fileToString(img);
+                const { content, fileType } = await FileService.fileToString(image);
                 const encryptedContent = DiffieHellmanService.encrypt(content, secretKey)
-                const encryptedFileTxt = FileService.stringToTextFile(encryptedContent, img.name)
+                const encryptedFileTxt = FileService.stringToTextFile(encryptedContent, image.name)
 
                 const formData = new FormData();
                 formData.append("file", encryptedFileTxt);
-                formData.append("filename", img.name)
+                formData.append("filename", image.name)
                 formData.append("receiver", receiver);
-                formData.append("randomId", randomId);
+                formData.append("id", randomId);
                 formData.append("fileType", fileType)
+                formData.append("expiresAt", expiresAt ? String(expiresAt): '')
+
 
                 await axios.post(`${BASE_URL}/encrypt-files/media`, formData, {
                     headers: {
@@ -80,7 +88,6 @@ export const FileSharingAPI = {
                 console.error("Error uploading encrypted file:", error);
                 throw error;
             }
-        })
     },
     async downloadEncryptedMedia(filename: string, secretKey: string, jwt: string, fileType: string): Promise<File> {
         try {
@@ -90,17 +97,12 @@ export const FileSharingAPI = {
                 },
                 responseType: "blob",
             });
+
             const blob = new Blob([response.data]);
             const encryptedFileTxt = new File([blob], filename, { type: 'text/plain' });
             const encryptedString = await FileService.textFileToString(encryptedFileTxt)
             const decryptedString = DiffieHellmanService.decrypt(encryptedString, String(secretKey))
-            const decryptedFile = FileService.stringToFile(decryptedString, filename, fileType)
-
-            console.log("Encrypted file downloaded and decrypted successfully!");
-            const fileUrl = URL.createObjectURL(decryptedFile);
-            console.log("Generated URL for decrypted file:", fileUrl);
-            return decryptedFile
-
+            return FileService.stringToFile(decryptedString, getFileNameWithoutExtension(filename), fileType)
         } catch (error) {
             console.error("Error downloading or decrypting file:", error);
             throw error;

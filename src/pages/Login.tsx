@@ -128,7 +128,7 @@ const InfoModal = ({ isVisible }: { isVisible: boolean }) => {
       borderBottom: '10px solid rgba(212, 213, 214, 0.8)',
     };
 
-    return <div style={styles} className="absolute top-[-10px] left-[10px]" />;
+    return <div style={styles} className="absolute top-[-9px] left-[10px]" />;
   };
 
   return (

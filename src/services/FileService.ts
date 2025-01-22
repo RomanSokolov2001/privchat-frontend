@@ -73,68 +73,84 @@ export const FileService = {
   fileToString(file: File): Promise<{ content: string; fileType: string }> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-
+      
       reader.onload = () => {
         if (typeof reader.result === 'string') {
+          console.log('File read successfully, type:', file.type);
+          console.log('Result starts with:', reader.result.substring(0, 50) + '...');
+          
           resolve({
             content: reader.result,
             fileType: file.type
           });
         } else {
-          reject(new Error('Failed to convert file to string'));
+          reject(new Error('FileReader result is not a string'));
         }
       };
-
+      
       reader.onerror = (error) => {
-        reject(new Error('Error reading file: ' + error));
+        reject(new Error(`Error reading file: ${error}`));
       };
-
-      if (file.type === 'text/plain') {
-        reader.readAsText(file);
-      } else {
-        reader.readAsDataURL(file);
-      }
+      
+      reader.readAsDataURL(file);
     });
   },
 
   stringToFile(fileString: string, fileName: string, fileType: string): File {
     try {
-      if (fileType === 'text/plain') {
-        const blob = new Blob([fileString], { type: fileType });
-        return new File([blob], fileName, { type: fileType });
+      console.log('Converting string to file...');
+      console.log('File type:', fileType);
+      console.log('String preview:', fileString.substring(0, 50) + '...');
+
+      if (!fileString) {
+        throw new Error('File string is empty');
       }
 
-      if (fileString.startsWith('data:')) {
-        const matches = fileString.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+      if (!fileString.startsWith('data:')) {
+        fileString = `data:${fileType};base64,${fileString}`;
+      }
 
-        if (!matches || matches.length !== 3) {
-          throw new Error('Invalid base64 string format');
-        }
+      const matches = fileString.match(/^data:(.+?)(;base64)?,(.+)$/);
+      
+      if (!matches) {
+        console.error('Failed to parse data URL. String starts with:', fileString.substring(0, 100));
+        throw new Error('Invalid data URL format');
+      }
 
-        const actualFileType = matches[1];
-        const base64Data = matches[2];
+      const actualFileType = matches[1] || fileType;
+      let base64Data = matches[3];
 
+      const paddingLength = 4 - (base64Data.length % 4);
+      if (paddingLength !== 4) {
+        base64Data += '='.repeat(paddingLength);
+      }
+
+      try {
         const byteCharacters = atob(base64Data);
         const byteArrays = [];
+        const sliceSize = 8192;
 
-        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-          const slice = byteCharacters.slice(offset, offset + 512);
+        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+          const slice = byteCharacters.slice(offset, offset + sliceSize);
           const byteNumbers = new Array(slice.length);
-
+          
           for (let i = 0; i < slice.length; i++) {
             byteNumbers[i] = slice.charCodeAt(i);
           }
-
+          
           byteArrays.push(new Uint8Array(byteNumbers));
         }
 
+        console.log('Successfully created byte arrays');
         const blob = new Blob(byteArrays, { type: actualFileType });
         return new File([blob], fileName, { type: actualFileType });
+      } catch (e: any) {
+        console.error('Error in base64 decoding:', e);
+        throw new Error(`Base64 decoding failed: ${e.message}`);
       }
-
-      throw new Error('Unsupported string format');
     } catch (error: any) {
-      throw new Error('Failed to convert string to file: ' + error.message);
+      console.error('Full error details:', error);
+      throw new Error(`Failed to convert string to file: ${error.message}`);
     }
   },
 
@@ -151,6 +167,10 @@ export const FileService = {
 
     URL.revokeObjectURL(url);
     document.body.removeChild(link);
+  },
+  isSupportedFileType(fileType: string): boolean {
+    // Add any file type restrictions here if needed
+    return true; // Currently supporting all file types
   }
 };
 

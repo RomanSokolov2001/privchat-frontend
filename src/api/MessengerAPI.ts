@@ -5,36 +5,19 @@ import { BASE_URL } from "../config";
 import { generateRandomId } from "../utils/functions";
 
 
-
 export const MessengerAPI = {
-  async getMessages(jwt: string) {
-    const response = await axios.get(`${BASE_URL}/encrypt-chat/messages`, {
-      headers: { Authorization: `Bearer ${jwt}` }
-    });
-    return response.data;
-  },
-
-  async sendMessage(receiver: string, content: string, secretKey: string, jwt: string) {
+  async sendMessage(receiver: string, content: string, secretKey: string, jwt: string, expiresAt?: number) {
     const encryptedContent = DiffieHellmanService.encrypt(content, secretKey)
     const randomId = generateRandomId()
     const createdAt = new Date()
-    const dto = { content: encryptedContent, receiver: receiver, id: randomId, createdAt: createdAt}
+   
+    const dto = { content: encryptedContent, receiver: receiver, id: randomId, createdAt: createdAt, expiresAt, type: "message"}
 
-    const response = await axios.post(`${BASE_URL}/encrypt-chat/messages`, dto, {
+    const response = await axios.post(`${BASE_URL}/chat/messages`, dto, {
       headers: { Authorization: `Bearer ${jwt}` }
     });
 
     return response.data;
-  },
-
-  async getMessagesFromUser(nickname: string, secretKey: string, jwt: string) {
-
-    const response = await axios.get(`${BASE_URL}/encrypt-chat/messages-from`, {
-      params: { nickname },
-      headers: { Authorization: `Bearer ${jwt}` }
-    });
-
-    return DiffieHellmanService.decryptMessages(response.data, secretKey)
   },
 
   async getChats(requestedPublicKey: string, jwt: string) {
@@ -64,7 +47,6 @@ export const MessengerAPI = {
   },
 
   async sendChatRequest(dto: ChatRequestDto, jwt: string) {
-
     try {
       const response = await axios.post(
         `${BASE_URL}/encrypt-chat/create`,
@@ -93,5 +75,35 @@ export const MessengerAPI = {
       console.log('Error:', error);
       return "error";
     }
+  },
+
+  async sendTimerMessage(receiver: string, time: number, jwt: string) {
+    const randomId = generateRandomId()
+    const createdAt = new Date()
+    const dto = { content: time, receiver: receiver, id: randomId, createdAt: createdAt, type: 'timer'}
+
+    const response = await axios.post(`${BASE_URL}/chat/messages`, dto, {
+      headers: { Authorization: `Bearer ${jwt}` }
+    });
+
+    return response.data;
+  },
+  async confirmThatMessageReached(messageId: string, receiver: string, jwt: string, isWatched: boolean) {
+    let state
+    isWatched ? state = 'watched' : state = 'reached'
+    const dto = {messageId, receiver}
+    const response = await axios.post(`${BASE_URL}/chat/confirm-${state}`, dto, {
+      headers: { Authorization: `Bearer ${jwt}` }
+    });
+
+    return response.data;
+  },
+  async confirmThatMessageWatched(messageId: string, receiver: string, jwt: string) {
+    const dto = {messageId, receiver}
+    const response = await axios.post(`${BASE_URL}/chat/confirm-watched`, dto, {
+      headers: { Authorization: `Bearer ${jwt}` }
+    });
+
+    return response.data;
   }
 }

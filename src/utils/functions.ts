@@ -57,6 +57,31 @@ export function timeAgo(date: string): string {
   return "just now";
 }
 
+export function getStringFromMs(ms: any) {
+  const timeOptions = [
+    { value: 1, unit: 'second', ms: 1000 },
+    { value: 5, unit: 'seconds', ms: 5000 },
+    { value: 10, unit: 'seconds', ms: 10000 },
+    { value: 30, unit: 'seconds', ms: 30000 },
+    { value: 1, unit: 'minute', ms: 60000 },
+    { value: 2, unit: 'minutes', ms: 120000 },
+    { value: 5, unit: 'minutes', ms: 300000 },
+    { value: 10, unit: 'minutes', ms: 600000 },
+    { value: 30, unit: 'minutes', ms: 1800000 },
+    { value: 1, unit: 'hour', ms: 3600000 },
+  ];
+
+  var formattedTime = "error"
+
+  timeOptions.map((e)=> {
+    if (e.ms == Number(ms)) {
+      formattedTime = `${String(e.value)} ${e.unit}`
+    }
+  })
+
+  return formattedTime
+}
+
 export function generateRandomId(length = 8) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let randomId = '';
@@ -64,4 +89,11 @@ export function generateRandomId(length = 8) {
     randomId += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return randomId;
+}
+
+export function getFileNameWithoutExtension(filename: string): string {
+  const noExt = filename.substring(0, filename.lastIndexOf('.')) || filename;
+    const underscoreIndex = noExt.indexOf('_');
+    
+    return underscoreIndex >= 0 ? noExt.substring(underscoreIndex + 1) : noExt;
 }

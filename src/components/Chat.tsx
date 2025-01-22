@@ -2,7 +2,7 @@ import { Key, useEffect, useRef, useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { useMessenger } from '../context/MessengerContext';
 import { getOpponentNickname } from '../utils/functions';
-import MessageFabric from './Message';
+import MessageFabric from '../components/messages/MessageFabric';
 import { MessageInterface } from '../types';
 import { MessengerAPI } from '../api/MessengerAPI';
 import { FileSharingAPI } from '../api/FileSharingAPI';
@@ -13,8 +13,6 @@ const Chat = () => {
   const { user } = useUser()
   const { messages, setMessages, currentChat, screenSize } = useMessenger()
   const [chatMessages, setChatMessages] = useState<any>([])
-  const [message, setMessage] = useState('');
-  const [opponentNickname, setOpponentNickname] = useState<string>('')
 
 
   useEffect(() => {
@@ -25,6 +23,13 @@ const Chat = () => {
         msg.sender == getOpponentNickname(user, currentChat) ||
         msg.receiver == getOpponentNickname(user, currentChat)
       );
+      const unwatchedMessages = messages.filter(msg =>
+        msg.isWatched == false && msg.sender == getOpponentNickname(user, currentChat)
+      );
+      unwatchedMessages.map((msg)=> {
+        console.log(`id: ${msg.id}`)
+          // user && MessengerAPI.confirmThatMessageWatched(msg.id, msg.sender, user?.jwt)
+      });
 
       setChatMessages(filteredMessages);
     }
@@ -53,14 +58,19 @@ const Chat = () => {
         return (
           <MessageFabric
             id={message.id}
-            imageURLS={message.imageURLS}
+            imageURL={message.imageURL}
             key={index}
-            createdAt={message.time}
+            createdAt={message.createdAt}
             text={message.content}
             fileEntry={message.fileEntry}
             isOnLeft={user?.nickname === message.receiver}
             isLast={index === chatMessages.length - 1}
             downloadFile={handleFileDownload}
+            type={message.type}
+            sender={message.sender}
+            receiver={user?.nickname || ''}
+            isReceived={message.isReceived || false}
+            isWatched={message.isWatched || false}
           />
         )
       })}

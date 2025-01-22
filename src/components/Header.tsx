@@ -1,7 +1,6 @@
 import React from 'react';
 import HamburgerMenu from './animated/hamburgerMenu/HamburgerMenu';
 import { useMessenger } from '../context/MessengerContext';
-import Icon from './Icon';
 import { iconsRef } from '../utils/iconsRef';
 import ButtonIcon from '../buttons/ButtonIcon';
 
