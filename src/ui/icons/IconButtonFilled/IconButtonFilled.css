@@ -1,0 +1,21 @@
+.icon-button-filled-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    margin: 4px;
+    background-color: #4f4f4f; /* Gray background */
+    border-radius: 20%; /* Rounded corners */
+    cursor: pointer;
+    transition: all 0.3s ease; /* Smooth transition for shadow and scale */
+}
+
+.icon-button-filled-container:hover {
+    background-color: #383838; /* Gray background */
+    box-shadow: 0px 2px 7px rgba(0, 0, 0, 0.3); /* Add shadow on hover */
+}
+
+.icon-button-filled-container:active {
+    transform: scale(0.95); /* Decrease scale when clicked */
+    transition: transform 0.1s ease-in-out; /* Smooth scale transition on click */
+}
