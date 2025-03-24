@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { animated, useSpring } from '@react-spring/web';
 import { MessengerAPI } from '../api/MessengerAPI';
 import { useUser } from '../context/UserContext';
@@ -11,6 +11,7 @@ import ChatBlock from './animated/chatBlock/ChatBlock';
 const LeftBar: React.FC = () => {
   const { user } = useUser();
   const { chats, setChats, setCurrentChat, isMobile, screenSize, showSidebar } = useMessenger();
+  const chatsRef = useRef<ChatInterface[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showedChats, setShowedChats] = useState<ChatInterface[]>([]);
 
@@ -21,8 +22,8 @@ const LeftBar: React.FC = () => {
 
   // Update chats display when chats change
   useEffect(() => {
-    setShowedChats(chats || []);
-  }, [chats]);
+    chatsRef.current = chats;
+  }, [chats, setChats]);
 
   // Handle sidebar animation based on screen size
   useEffect(() => {
@@ -34,18 +35,18 @@ const LeftBar: React.FC = () => {
   }, [isMobile, showSidebar, api]);
 
   function handleClick (chat: ChatInterface) {
-    const updatedChats = chats.map((ch) => {
+    const updatedChats = chatsRef.current.map((ch) => {
       if (chat.sharedSecretKey == ch.sharedSecretKey) {
         return {...ch, unreads: 0}
       } else return ch
     })
     setChats(updatedChats)
-    setCurrentChat(chat)  
+    setCurrentChat(chat)
   }
 
   // Render list of chats
   const renderChats = () => {
-    return showedChats.map((chat: ChatInterface) => (
+    return chatsRef.current.map((chat: ChatInterface) => (
         <ChatBlock nickname={getOpponentNickname(user, chat)} onClick={() => handleClick(chat)} unreads={chat.unreads}/>
     ));
   };
@@ -70,16 +71,16 @@ const LeftBar: React.FC = () => {
 
         {/* Chat List */}
         <div className="w-full overflow-auto">
-          {showedChats.length > 0 ? (
+          {chatsRef.current.length > 0 ? (
             <ul>{renderChats()}</ul>
           ) : (
             <p className="text-center text-gray-500">No chats available</p>
           )}
         </div>
-          
+
         {/* Chat Blocks for Demo */}
         <div className="w-full overflow-auto">
-          
+
         </div>
       </animated.div>
     </div>

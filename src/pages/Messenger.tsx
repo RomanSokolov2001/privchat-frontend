@@ -21,6 +21,9 @@ const Messenger: React.FC = () => {
   const messagesRef = useRef<MessageInterface[]>([])
   const currentChatRef = useRef<ChatInterface>()
 
+  function handleChatsChange(chats: ChatInterface[]) {
+    setChats(chats);
+  }
 
   useEffect(() => {
     if (currentChat) {
@@ -58,6 +61,7 @@ const Messenger: React.FC = () => {
     if (wsMessage.data && currentChatRef.current && wsMessage.data.sender !== user.nickname) {
       isMessageInCurrentChat  = currentChatRef.current.requesterNickname == wsMessage.data.sender || currentChatRef.current.requestedNickname == wsMessage.data.sender
     }
+    console.log(wsMessage);
     if (wsMessage.type == "request") {
       messageHandlers.request(user, setChats, setCurrentChat);
     }
@@ -78,6 +82,13 @@ const Messenger: React.FC = () => {
         MessengerAPI.confirmThatMessageReached(wsMessage.data.id, wsMessage.data.sender, user?.jwt, isMessageInCurrentChat)
       }
       messageHandlers.media(wsMessage, chatsRef, setMessages, user);
+    }
+    if (wsMessage.data && wsMessage.data.type == 'delete-chat') {
+      messageHandlers.delete(wsMessage, chatsRef, handleChatsChange, currentChatRef, setCurrentChat);
+    }
+    if (wsMessage.data && wsMessage.data.type == 'clear-chat') {
+      // messageHandlers.clear(wsMessage, chatsRef, setChats, setCurrentChat);
+
     }
     if (wsMessage.data && wsMessage.data.type == 'timer') {
       messageHandlers.timer(wsMessage, chatsRef, setMessages, setChats, user, setCurrentChat);

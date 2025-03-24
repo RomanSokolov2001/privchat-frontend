@@ -30,6 +30,7 @@ export interface ChatInterface {
     requestedPublicKey: string
     requesterPublicKey: string
     sharedSecretKey: string
+    chatId: string
     timer: number
     unreads: number
 }

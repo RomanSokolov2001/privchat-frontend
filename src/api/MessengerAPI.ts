@@ -46,8 +46,6 @@ export const MessengerAPI = {
   },
 
   async sendChatRequest(dto: any, jwt: string) {
-    const randomId = generateRandomId()
-    dto.chatId = randomId;
     try {
       const response = await axios.post(
         `${BASE_URL}/encrypt-chat/create`,
@@ -88,8 +86,8 @@ export const MessengerAPI = {
 
     return response.data;
   },
-  async sendDeleteCommand(receiver: string, time: number, jwt: string) {
-    const dto = { receiver: receiver, type: 'delete-chat', createdAt: new Date()}
+  async sendDeleteCommand(receiver: string, chatId: string, jwt: string) {
+    const dto = { receiver: receiver, type: 'delete-chat', createdAt: new Date(), chatId}
 
     const response = await axios.post(`${BASE_URL}/chat/messages`, dto, {
       headers: { Authorization: `Bearer ${jwt}` }
@@ -97,8 +95,8 @@ export const MessengerAPI = {
 
     return response.data;
   },
-  async sendClearCommand(receiver: string, time: number, jwt: string) {
-    const dto = { receiver: receiver, type: 'clear-chat', createdAt: new Date()}
+  async sendClearCommand(receiver: string, chatId: string, jwt: string) {
+    const dto = { receiver: receiver, type: 'clear-chat', createdAt: new Date(), chatId}
 
     const response = await axios.post(`${BASE_URL}/chat/messages`, dto, {
       headers: { Authorization: `Bearer ${jwt}` }

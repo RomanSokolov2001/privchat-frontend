@@ -12,6 +12,8 @@ import SetTimer from "./SetTimer";
 import AnimatedButton from "./Button";
 import DropdownMenu from "../ui/DropdownMenu";
 import {FormControl, FormHelperText, MenuItem, Select, SelectChangeEvent} from "@mui/material";
+import {MessengerAPI} from "../api/MessengerAPI";
+import chat from "./Chat";
 
 interface ChatManagerProps {
 };
@@ -47,15 +49,26 @@ const ChatManager = ({}: ChatManagerProps) => {
         setSelectedTimer(event.target.value);
     };
 
+    async function handleClearOrDelete() {
+        if (!currentChat || !user) return
+        if (currentAction === 'clear') {
+            await MessengerAPI.sendClearCommand(getOpponentNickname(user, currentChat), currentChat?.chatId, user?.jwt);
+            console.log('sending clear cmd')
+        }
+        if (currentAction === 'delete') {
+            console.log('sending delete cmd')
+
+            await MessengerAPI.sendDeleteCommand(getOpponentNickname(user, currentChat), currentChat?.chatId, user?.jwt);
+        }
+    }
+
     const ConfirmElemnt = () => {
         if (currentAction) {return (
             <div className={'w-full flex flex-col justify-end h-[200px] overflow-hidden'}>
                 <a className='text-xl font-semibold pl-4 pr-4'>{`Are you sure want to ${currentAction} chat?`}</a>
                 {<div className="flex items-center flex-row justify-between w-full p-2 gap-4">
-                    <AnimatedButton text={"Yes"} onClick={() => {
-                    }} color={'#a32f2f'}/>
-                    <AnimatedButton text={"Cancel"} onClick={() => {
-                    }} color={'#bababa'}/>
+                    <AnimatedButton text={"Yes"} onClick={handleClearOrDelete} color={'#a32f2f'}/>
+                    <AnimatedButton text={"Cancel"} onClick={handleClearOrDelete} color={'#bababa'}/>
                 </div>}
             </div>
         )}
@@ -88,11 +101,11 @@ const ChatManager = ({}: ChatManagerProps) => {
                     <div className='flex items-start justify-center flex-col p-2 gap-3 pl-5 pr-5 w-[350px] h-[360px]'>
                         <div className='flex items-center flex-row justify-between w-full'>
                             <a className='text-xl font-[400]'>Clear chat: </a>
-                            <IconButton imgSrc={iconsRef.brush} onClick={() => setCurrentAction('delete')}/>
+                            <IconButton imgSrc={iconsRef.brush} onClick={() => setCurrentAction('clear')}/>
                         </div>
                         <div className='flex items-center flex-row justify-between w-full'>
                             <a className='text-xl font-[400]'>Delete chat: </a>
-                            <IconButton imgSrc={iconsRef.bin} onClick={() => setCurrentAction('clear')}/>
+                            <IconButton imgSrc={iconsRef.bin} onClick={() => setCurrentAction('delete')}/>
                         </div>
                         <div className='flex items-center flex-row justify-between w-full'>
                             <a className='text-xl font-[400]'>Set Timer</a>

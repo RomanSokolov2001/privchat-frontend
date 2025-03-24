@@ -6,6 +6,7 @@ import DiffieHellmanService from './DiffieHellmanService';
 import { ChatInterface, MessageInterface } from '../types';
 import { FileSharingAPI } from '../api/FileSharingAPI';
 import { BASE_URL } from '../config';
+import {Dispatch, MutableRefObject, SetStateAction} from "react";
 
 
 export const initializeWebSocket = (url: string, onMessageReceived: (msg: any) => void, nickname: string, callback?: () => void) => {
@@ -23,12 +24,12 @@ export const initializeWebSocket = (url: string, onMessageReceived: (msg: any) =
 
     if (subscription) {
       client.send('/app/chat.addUser', {}, nickname);
-      
+
       if (callback) {
         callback();
       }
     }
-  }, 
+  },
   (error: any) => {
     console.error('STOMP connection error:', error);
   });
@@ -48,9 +49,33 @@ const extractSessionId = (sessionUrl: string): string => {
 };
 
 export const messageHandlers = {
+  delete(wsMessage: any, chatsRef: MutableRefObject<ChatInterface[]>, handleChatsChange: (chats: ChatInterface[]) => void, currentChatRef: MutableRefObject<ChatInterface | undefined> , setCurrentChat: Dispatch<SetStateAction<ChatInterface | null>>) {
+
+    console.log(wsMessage.data.chatId);
+    const updatedChats = chatsRef.current.map((chat: ChatInterface) => {
+      if (chat.chatId !== wsMessage.data.chatId) {
+        console.log('LOOLOLOLOL')
+        return {...chat}
+      };
+      return {}
+    });
+    if (currentChatRef.current && (currentChatRef.current.chatId === wsMessage.data.chatId)) {
+      currentChatRef.current = undefined;
+      setCurrentChat(null)
+    }
+    // @ts-ignore
+    chatsRef.current = updatedChats;
+    // @ts-ignore
+    handleChatsChange(updatedChats);
+    console.log(chatsRef.current);
+
+  },
+  clear(wsMessage: any, chatsRef: MutableRefObject<ChatInterface[]>, setChats: Dispatch<SetStateAction<ChatInterface[]>>, setCurrentChat: Dispatch<SetStateAction<ChatInterface | null>>) {
+    console.log('Success have to clear')
+  },
   async request (user: any, setChats: any, setCurrentChat: any) {
     const fetchedChats = await MessengerAPI.getChats(user.publicKey, user.jwt);
-    
+
     if (!fetchedChats) return
     const updatedChats = fetchedChats.map((chat: ChatInterface) => {
       if (user.invitationLink == chat.requestedNickname) {
@@ -60,6 +85,7 @@ export const messageHandlers = {
       const sharedKey = DiffieHellmanService.generateSharedSecret(otherPartyKey, user.secretKey);
       return { ...chat, sharedSecretKey: sharedKey || '' };
     });
+    console.log(updatedChats);
     setChats(updatedChats);
   },
   async file (wsMessage: any, setMessages: any) {
@@ -77,18 +103,18 @@ export const messageHandlers = {
   async message(wsMessage: any, chatsRef: any, setMessages: any, user: any) {
     const { sender, content: encryptedContent, receiver, id } = wsMessage.data || {};
     if (!sender || !encryptedContent) return;
-    
+
     var opponentNickname = ''
     if (sender == user.nickname) {
       opponentNickname = receiver
     } else {
       opponentNickname = sender
     }
-    
+
     const chat = chatsRef.current.find(
       (chat: any) => chat.requesterNickname === opponentNickname || chat.requestedNickname === opponentNickname
     );
-    
+
 
     const sharedKey = chat?.sharedSecretKey;
     console.log("that key"+ sharedKey)
@@ -97,7 +123,7 @@ export const messageHandlers = {
       console.log("Could decrypt content")
       return
     };
-    
+
     setMessages((prev: any) => [
       ...prev,
       {
@@ -117,7 +143,7 @@ export const messageHandlers = {
     const sharedKey = chat?.sharedSecretKey;
 
     const file = await FileSharingAPI.downloadEncryptedMedia(wsMessage.data.filename, sharedKey, user?.jwt, wsMessage.data.fileType)
-    
+
     const imageURL = URL.createObjectURL(file)
     setMessages((prevMessages: any) => {
       return [
@@ -140,7 +166,7 @@ export const messageHandlers = {
     const chat = chatsRef.current.find(
       (chat: any) => chat.requesterNickname === wsMessage.data.sender || chat.requestedNickname === wsMessage.data.sender
     );
-    
+
     const updatedChats = chatsRef.current.map((chat: ChatInterface) => {
       if (sender == getOpponentNickname(user, chat) || receiver == getOpponentNickname(user, chat)) {
         return { ...chat, timer: content };
@@ -197,19 +223,19 @@ watched(messageId: string, messagesRef: React.MutableRefObject<MessageInterface[
   ): Promise<void> {
     // Find the chat where the message sender matches either requester or requested
     const chat = chatsRef.current.find(
-      (chat) => 
-        chat.requesterNickname === wsMessage.data.sender || 
+      (chat) =>
+        chat.requesterNickname === wsMessage.data.sender ||
         chat.requestedNickname === wsMessage.data.sender
     );
-  
+
     const updatedChats = chatsRef.current.map((ch) => {
       // Check if this chat is currently open
-      const isThisCurrentChat = currentChat 
+      const isThisCurrentChat = currentChat
         ? ch.sharedSecretKey === currentChat.sharedSecretKey
         : false;
       // Only increment unreads if this is the matching chat AND it's not currently open
-      if (chat && 
-          ch.sharedSecretKey === chat.sharedSecretKey && 
+      if (chat &&
+          ch.sharedSecretKey === chat.sharedSecretKey &&
           !(wsMessage.data.sender === user.nickname) &&
           !isThisCurrentChat) {
         const currentUnreads = ch.unreads || 0;
@@ -218,10 +244,10 @@ watched(messageId: string, messagesRef: React.MutableRefObject<MessageInterface[
           unreads: currentUnreads + 1
         };
       }
-      
+
       return ch;
     });
-  
+
     setChats(updatedChats);
   }
 }
