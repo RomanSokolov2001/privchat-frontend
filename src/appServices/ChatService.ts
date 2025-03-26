@@ -1,4 +1,4 @@
-import {MessageDto} from "../types";
+import {MessageDto} from "../utils/types";
 
 class ChatService {
     clearChat(userA: string, userB: string, messages: MessageDto[], setMessages: () => void) {

@@ -1,28 +1,70 @@
 import React, { useEffect, useRef } from 'react';
-import { initializeWebSocket, disconnectWebSocket, messageHandlers } from '../services/WebSocketService';
-import { useUser } from '../context/UserContext';
-import { useMessenger } from '../context/MessengerContext';
-import { ChatInterface, MessageInterface } from '../types';
-import Header from '../components/Header';
-import { getOpponentNickname } from '../utils/functions';
-import Body from '../components/Body';
-import Profile from '../components/Profile';
 import { useLocation } from 'react-router-dom';
-import { MessengerAPI } from '../api/MessengerAPI';
-import { BASE_URL } from '../config';
+
+import { initializeWebSocket, disconnectWebSocket } from '../services/WebSocketService';
+import {RootState} from "../redux/store";
+import {useDispatch, useSelector} from "react-redux";
+import {
+  addMessage, addUnreadToChat, clearChatById, deleteChatById,
+  setChats,
+  setCurrentChat,
+  setMessages,
+  updateChatById,
+  updateMessageById
+} from '../redux/messengerSlice';
+
+import { ChatInterface, MessageInterface } from '../utils/types';
+
+import Header from '../UI/Header';
+import Body from '../UI/Body';
+import Profile from '../UI/modals/Profile';
 
 
 const Messenger: React.FC = () => {
-  const location = useLocation();
-  const { invitationCode } = location.state || {};
-  const { user } = useUser();
-  const { chats, setChats, setMessages, currentChat, setCurrentChat, messages } = useMessenger();
+  const user = useSelector((state: RootState) => state.user.user);
+  const messages = useSelector((state: RootState) => state.messenger.messages);
+  const currentChat = useSelector((state: RootState) => state.messenger.currentChat);
+  const chats = useSelector((state: RootState) => state.messenger.chats);
+
+  const dispatch = useDispatch();
+
   const chatsRef = useRef<ChatInterface[]>([]);
   const messagesRef = useRef<MessageInterface[]>([])
   const currentChatRef = useRef<ChatInterface>()
 
+  function handleDeleteChat(chatId: string) {
+    dispatch(deleteChatById(chatId));
+  }
+
+  function handleClearChat(chatId: string) {
+    dispatch(clearChatById({chatId, senderNickname: user?.nickname}));
+  }
+
+  function changeMessages(messages: MessageInterface[]) {
+    dispatch(setMessages(messages));
+  }
+  function changeCurrentChat(chat: ChatInterface) {
+    dispatch(setCurrentChat(chat));
+  }
+
   function handleChatsChange(chats: ChatInterface[]) {
-    setChats(chats);
+    dispatch(setChats(chats));
+  }
+
+  function handleAddMessage(msg: MessageInterface) {
+    dispatch(addMessage(msg))
+  }
+
+  function handleUpdateChat(chat: any) {
+    dispatch(updateChatById(chat));
+  }
+
+  function handleUpdateMessage(message: any) {
+    dispatch(updateMessageById(message));
+  }
+
+  function handleAddUnreadToChat(chatId: string) {
+    dispatch(addUnreadToChat(chatId));
   }
 
   useEffect(() => {
@@ -38,90 +80,15 @@ const Messenger: React.FC = () => {
 
   useEffect(() => {
     const client = initializeWebSocket(
-      BASE_URL,
-      handleSocketUpdate,
-      user?.nickname || '',
-      () => handleInvite()
+        currentChatRef, chatsRef, messagesRef, user, handleChatsChange, changeCurrentChat, changeMessages, handleAddMessage, handleUpdateChat, handleUpdateMessage, handleAddUnreadToChat, handleDeleteChat, handleClearChat
     );
-
-    function handleInvite() {
-      if (!user || !invitationCode) return;
-      MessengerAPI.sendChatRequest(
-        { requestedNickname: invitationCode, requesterPublicKey: user.publicKey },
-        user?.jwt
-      );
-    }
-
     return () => disconnectWebSocket(client);
   }, [user]);
 
-  const handleSocketUpdate = async (wsMessage: any) => {
-    if (!user) return
-    let isMessageInCurrentChat = false
-    if (wsMessage.data && currentChatRef.current && wsMessage.data.sender !== user.nickname) {
-      isMessageInCurrentChat  = currentChatRef.current.requesterNickname == wsMessage.data.sender || currentChatRef.current.requestedNickname == wsMessage.data.sender
-    }
-    console.log(wsMessage);
-    if (wsMessage.type == "request") {
-      messageHandlers.request(user, setChats, setCurrentChat);
-    }
-    if (wsMessage.type == "file") {
-      if (wsMessage.data.sender !== user.nickname) {
-        MessengerAPI.confirmThatMessageReached(wsMessage.data.id, wsMessage.data.sender, user?.jwt, isMessageInCurrentChat)
-      }      messageHandlers.file(wsMessage, setMessages);
-    }
-    if (wsMessage.type == "message") {
-      if (wsMessage.data.sender !== user.nickname) {
-        MessengerAPI.confirmThatMessageReached(wsMessage.data.id, wsMessage.data.sender, user?.jwt, isMessageInCurrentChat)
-      }
-
-      messageHandlers.message(wsMessage, chatsRef, setMessages, user);
-    }
-    if (wsMessage.type == 'media') {
-      if (wsMessage.data.sender !== user.nickname) {
-        MessengerAPI.confirmThatMessageReached(wsMessage.data.id, wsMessage.data.sender, user?.jwt, isMessageInCurrentChat)
-      }
-      messageHandlers.media(wsMessage, chatsRef, setMessages, user);
-    }
-    if (wsMessage.data && wsMessage.data.type == 'delete-chat') {
-      messageHandlers.delete(wsMessage, chatsRef, handleChatsChange, currentChatRef, setCurrentChat);
-    }
-    if (wsMessage.data && wsMessage.data.type == 'clear-chat') {
-      // messageHandlers.clear(wsMessage, chatsRef, setChats, setCurrentChat);
-
-    }
-    if (wsMessage.data && wsMessage.data.type == 'timer') {
-      messageHandlers.timer(wsMessage, chatsRef, setMessages, setChats, user, setCurrentChat);
-    }
-    if (wsMessage.data && wsMessage.type == 'reached') {
-      messageHandlers.reached(wsMessage.data, messagesRef, setMessages);
-    }
-    if (wsMessage.data && wsMessage.type == 'watched') {
-      messageHandlers.watched(wsMessage.data, messagesRef, setMessages);
-    }
-    if (wsMessage.data && wsMessage.data.expiresAt) {
-      scheduleMessageDeletion(wsMessage.data.id, wsMessage.data.expiresAt);
-    }
-    wsMessage.data && messageHandlers.notify(wsMessage, chatsRef, setChats, user, currentChatRef.current)
-  };
-
-  const scheduleMessageDeletion = (messageId: string, expiresAt: number) => {
-    const timeUntilDeletion = expiresAt - Date.now();
-
-    if (timeUntilDeletion > 0) {
-      setTimeout(() => {
-        setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== messageId));
-        console.log(`Message with ID ${messageId} has been deleted.`);
-      }, timeUntilDeletion);
-    }
-  };
 
   return (
     <div className="flex flex-col h-screen w-screen">
-      <Header
-        userNickname={user?.nickname}
-        chatNickname={currentChat ? getOpponentNickname(user, currentChat) : 'No chat selected'}
-      />
+      <Header/>
       <Body />
       <Profile />
     </div>

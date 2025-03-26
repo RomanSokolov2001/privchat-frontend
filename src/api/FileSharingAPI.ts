@@ -6,7 +6,7 @@ import { BASE_URL } from "../config";
 
 
 export const FileSharingAPI = {
-    async uploadEncryptedFile(file: File, secretKey: string, jwt: string, receiver: string, expiresAt?: number) {
+    async uploadEncryptedFile(file: File, chatId: string, secretKey: string, jwt: string, receiver: string, expiresAt?: number) {
         try {
             const { content, fileType } = await FileService.fileToString(file);
             const encryptedContent = DiffieHellmanService.encrypt(content, secretKey)
@@ -18,7 +18,7 @@ export const FileSharingAPI = {
             formData.append("receiver", receiver);
             formData.append("fileType", fileType)
             formData.append('id', randomId)
-            
+            formData.append('chatId', chatId);
             formData.append("expiresAt", expiresAt ? String(expiresAt): '')
 
             const response = await axios.post(`${BASE_URL}/encrypt-files/files`, formData, {
@@ -31,7 +31,7 @@ export const FileSharingAPI = {
             console.log("Encrypted file uploaded successfully!");
             return response.data;
         } catch (error) {
-            console.error("Error uploading encrypted file:", error);
+            console.error("@uploadEncryptedFile:", error);
             throw error;
         }
     },
@@ -53,11 +53,11 @@ export const FileSharingAPI = {
             console.log("Encrypted file downloaded and decrypted successfully!");
             FileService.saveFileToClient(decryptedFile);
         } catch (error) {
-            console.error("Error downloading or decrypting file:", error);
+            console.error("@downloadEncryptedFile:", error);
             throw error;
         }
     },
-    async uploadEncryptedMedia(image: File, secretKey: string, jwt: string, receiver: string, expiresAt?: number) {
+    async uploadEncryptedMedia(image: File, chatId: string, secretKey: string, jwt: string, receiver: string, expiresAt?: number) {
         const randomId = generateRandomId()
             try {
                 const { content, fileType } = await FileService.fileToString(image);
@@ -70,6 +70,7 @@ export const FileSharingAPI = {
                 formData.append("receiver", receiver);
                 formData.append("id", randomId);
                 formData.append("fileType", fileType)
+                formData.append('chatId', chatId);
                 formData.append("expiresAt", expiresAt ? String(expiresAt): '')
 
 
@@ -82,7 +83,7 @@ export const FileSharingAPI = {
 
                 console.log("Encrypted file uploaded successfully!");
             } catch (error) {
-                console.error("Error uploading encrypted file:", error);
+                console.error("@uploadEncryptedMedia:", error);
                 throw error;
             }
     },
@@ -101,7 +102,7 @@ export const FileSharingAPI = {
             const decryptedString = DiffieHellmanService.decrypt(encryptedString, String(secretKey))
             return FileService.stringToFile(decryptedString, getFileNameWithoutExtension(filename), fileType)
         } catch (error) {
-            console.error("Error downloading or decrypting file:", error);
+            console.error("@downloadEncryptedMedia:", error);
             throw error;
         }
     }

@@ -1,4 +1,4 @@
-import { ChatInterface } from "../types"
+import { ChatInterface } from "./types"
 
 export function getOpponentNickname(user: any, chat: ChatInterface | null) {
   if (!chat) return "error"
@@ -63,6 +63,7 @@ export function getStringFromMs(ms: any) {
     { value: 1, unit: 'second', ms: 1000 },
     { value: 5, unit: 'seconds', ms: 5000 },
     { value: 10, unit: 'seconds', ms: 10000 },
+    { value: 15, unit: 'seconds', ms: 15000 },
     { value: 30, unit: 'seconds', ms: 30000 },
     { value: 1, unit: 'minute', ms: 60000 },
     { value: 2, unit: 'minutes', ms: 120000 },
@@ -95,6 +96,6 @@ export function generateRandomId(length = 8) {
 export function getFileNameWithoutExtension(filename: string): string {
   const noExt = filename.substring(0, filename.lastIndexOf('.')) || filename;
     const underscoreIndex = noExt.indexOf('_');
-    
+
     return underscoreIndex >= 0 ? noExt.substring(underscoreIndex + 1) : noExt;
 }
