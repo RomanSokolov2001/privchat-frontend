@@ -1,4 +1,3 @@
-import { ChatInterface, MessageInterface } from '../utils/types';
 
 // redux/store.ts
 import { configureStore } from '@reduxjs/toolkit';
