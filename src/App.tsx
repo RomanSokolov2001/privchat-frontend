@@ -9,6 +9,7 @@ import Messenger from "./pages/Messenger";
 import InvitationHandler from "./pages/InvitationHandler";
 import TermsOfUse from "./pages/TermsOfUse";
 import PrivateRoute from "./utils/PrivateRoute";
+import UITestPage from "./pages/UITestPage";
 
 
 const App: React.FC = () => {
@@ -22,6 +23,9 @@ const App: React.FC = () => {
 
                     <Route path="/messenger" element={
                         <PrivateRoute children={<Messenger/>}/>
+                    }/>
+                    <Route path="/test" element={
+                        <PrivateRoute children={<UITestPage/>}/>
                     }/>
                     <Route path="/termsofuse" element={<TermsOfUse/>}/>
                 </Routes>

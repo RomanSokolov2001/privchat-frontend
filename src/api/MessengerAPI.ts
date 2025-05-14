@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, {AxiosError} from "axios";
 import DiffieHellmanService from "../services/DiffieHellmanService";
 import {BASE_URL} from "../config";
 import {generateRandomId} from "../utils/functions";
@@ -71,8 +71,10 @@ export const MessengerAPI = {
             return "success";
 
         } catch (e) {
-            console.error('@sendChatRequest:', e);
-            throw e;
+
+            // @ts-ignore
+            console.error('@sendChatRequest:', (e as AxiosError).response.status);
+            // throw e;
         }
     },
     async sendTimerMessage(receiver: string, chatId: string, time: number, jwt: string) {

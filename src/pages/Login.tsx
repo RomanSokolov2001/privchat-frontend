@@ -13,6 +13,7 @@ import Toast from "../UI/modals/Toast";
 import TermsAndConditions from "../UI/parts/loginParts/TermsAndConfitions";
 import WhiteFrame from "../UI/parts/WhiteFrame";
 import PageBackground from "../UI/parts/PageBackground";
+import {Alert} from "@mui/material";
 
 
 const Login = () => {
@@ -42,7 +43,13 @@ const Login = () => {
 
     const LoginWindow = () =>
         <WhiteFrame>
-            <h2 className="text-2xl font-semibold text-center pb-[100px]">PrivChat</h2>
+            <h2 className="text-2xl font-semibold text-center pb-[20px]">PrivChat</h2>
+            <p className="text-xl "> - Have a <b>disposable</b> chat</p>
+            <p className="text-xl">- <b>End to end</b> encryption</p>
+            <p className="text-xl ">- Only you and <b>you own</b> the encryption <b>keys</b></p>
+            <p className="text-xl">- <b>No</b> messages stored!</p>
+            <p className="text-xl pb-[20px]">- Send <b>files</b> and <b>photos!</b></p>
+
             <Button text={"Enter Pool"} onClick={handleLogin}/>
             <TermsAndConditions/>
         </WhiteFrame>
